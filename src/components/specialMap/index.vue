@@ -2,7 +2,7 @@
  * @FilePath: index.vue
  * @Author: @zhangl
  * @Date: 2024-05-29 11:52:53
- * @LastEditTime: 2024-06-06 13:30:36
+ * @LastEditTime: 2024-06-07 15:25:09
  * @LastEditors: @zhangl
  * @Description:
 -->
@@ -15,7 +15,7 @@
 		@close="checkCancle"
 	>
 		<template #default>
-			<div class="h-full flex flex-col -mx-5">
+			<div class="h-full flex flex-col">
 				<div class="flex-1 bg-[#EBEFF3] mb-2 flex">
 					<ImgList
 						:index="nowImageIndex"
@@ -196,49 +196,51 @@
 								@cancle="cancleTable"
 							></Table>
 						</div>
-						<Draw
-							v-if="
-								activeTool === ToolType.draw ||
-								(activeEditorObject && activeEditorObject.type === 'path')
-							"
-							:activeObject="activeEditorObject"
-							@change="changeActiveOption"
-						></Draw>
-						<Point
-							v-if="
-								activeTool === ToolType.point ||
-								(activeEditorObject && activeEditorObject.type === 'f-point')
-							"
-							:activeObject="activeEditorObject"
-							@change="changeActiveOption"
-						></Point>
-						<Polyline
-							v-if="
-								activeTool === ToolType.line ||
-								(activeEditorObject && activeEditorObject.type === 'polyline')
-							"
-							:activeObject="activeEditorObject"
-							@change="changeActiveOption"
-						></Polyline>
-						<Circle
-							v-if="
-								activeTool === ToolType.circle ||
-								(activeEditorObject && activeEditorObject.type === 'circle')
-							"
-							:activeObject="activeEditorObject"
-							@change="changeActiveOption"
-						></Circle>
-						<Rect
-							v-if="
-								activeTool === ToolType.rect ||
-								(activeEditorObject && activeEditorObject.type === 'rect')
-							"
-							:activeObject="activeEditorObject"
-							@change="changeActiveOption"
-						></Rect>
+						<el-scrollbar height="200px">
+							<Draw
+								v-if="
+									activeTool === ToolType.draw ||
+									(activeEditorObject && activeEditorObject.type === 'path')
+								"
+								:activeObject="activeEditorObject"
+								@change="changeActiveOption"
+							></Draw>
+							<Point
+								v-if="
+									activeTool === ToolType.point ||
+									(activeEditorObject && activeEditorObject.type === 'f-point')
+								"
+								:activeObject="activeEditorObject"
+								@change="changeActiveOption"
+							></Point>
+							<Polyline
+								v-if="
+									activeTool === ToolType.line ||
+									(activeEditorObject && activeEditorObject.type === 'polyline')
+								"
+								:activeObject="activeEditorObject"
+								@change="changeActiveOption"
+							></Polyline>
+							<Circle
+								v-if="
+									activeTool === ToolType.circle ||
+									(activeEditorObject && activeEditorObject.type === 'circle')
+								"
+								:activeObject="activeEditorObject"
+								@change="changeActiveOption"
+							></Circle>
+							<Rect
+								v-if="
+									activeTool === ToolType.rect ||
+									(activeEditorObject && activeEditorObject.type === 'rect')
+								"
+								:activeObject="activeEditorObject"
+								@change="changeActiveOption"
+							></Rect>
+						</el-scrollbar>
 					</div>
 				</div>
-				<div class="flex">
+				<div class="flex -mt-10">
 					<div class="mr-2.5">
 						<span class="text-[#121B27] mr-[12px]">输出格式</span>
 						<el-select
@@ -294,7 +296,7 @@ import {
 	toRefs,
 	watch,
 } from 'vue'
-import { fabric } from 'fabric'
+// import { fabric } from 'fabric'
 import { ElImageViewer, ElMessage, ElMessageBox } from 'element-plus'
 import {
 	View,
@@ -314,22 +316,13 @@ import Table from './components/table.vue'
 import ImgList from './components/imgList.vue'
 import { TempLegend, ToolType, toolList, imgList } from './config'
 import compassImg from '@/assets/images/mapProduct/compass.png'
-import Editor from '~/lib/editor'
-import { SKETCH_ID } from '~/lib/editor/utils/constants'
-import { createFImage, createImage } from '~/lib/editor/objects/image'
 import {
-	downloadFile,
-	loadFont,
-	transformColors2Fill,
-} from '~/lib/editor/utils'
-import { createTextbox } from '~/lib/editor/objects/textbox'
-import { DRAW_MODE_CURSOR } from '~/lib/editor/icon'
-import { createShape } from '~/lib/editor/objects/shape'
-import { GPolyline } from '~/lib/editor/objects/polyline'
-import { GPoint } from '~/lib/editor/objects/point'
-import { LatlonLine } from '~/lib/editor/objects/latlon'
-import { ScaleRule } from '~/lib/editor/objects/scalerule'
-import { LegendBox } from '~/lib/editor/objects/legendBox'
+	fabric,
+	Editor,
+	FabricEditor,
+	FabricUtils,
+	FabricIcons,
+} from '@zbangbang/fabric-editor'
 
 // const props = withDefaults(defineProps<{}>(), {})
 // const {} = toRefs(props)
@@ -386,7 +379,6 @@ const checkCancle = () => {
 }
 const show = (data: any) => {
 	vDialogRef.value.show()
-	// imageList.value = imgList
 	loadEditor()
 }
 onUnmounted(() => {
@@ -408,7 +400,7 @@ const changeActiveImage = async (item: any, index: number) => {
 	})
 		.then(() => {
 			const png = editor.export2Img({ format: 'png' })
-			downloadFile(png, 'png', 'test')
+			FabricUtils.downloadFile(png, 'png', 'test')
 			imageList.value[lastImageIndex.value].url = png
 			ElMessage({
 				type: 'success',
@@ -454,7 +446,7 @@ const clickHandler = (opt: any) => {
 	const { target } = opt
 	if (editor.getIfPanEnable()) return
 
-	if (!target || target.id === SKETCH_ID) {
+	if (!target || target.id === FabricUtils.SKETCH_ID) {
 		activeEditorObject.value = undefined
 		return
 	}
@@ -473,7 +465,7 @@ const clickHandler = (opt: any) => {
 
 	if (opt.button === 3) {
 		// 右键
-		if (target.id !== SKETCH_ID) {
+		if (target.id !== FabricUtils.SKETCH_ID) {
 			editor.canvas.setActiveObject(target)
 		}
 	}
@@ -718,7 +710,7 @@ const activeImage = shallowRef<any>()
  * @return {*}
  */
 const addImage = async (url: string) => {
-	activeImage.value = await createFImage({
+	activeImage.value = await FabricEditor.createFImage({
 		imageSource: url,
 		canvas: editor.canvas,
 	})
@@ -849,7 +841,7 @@ let activeText = shallowRef<any>()
  * @return {*}
  */
 const addText = async () => {
-	activeText.value = await createTextbox({
+	activeText.value = await FabricEditor.createTextbox({
 		...fontOptions.value,
 		canvas: editor.canvas,
 	})
@@ -863,7 +855,7 @@ const addText = async () => {
 const changeFamily = async (val: string) => {
 	fontOptions.value.fontFamily = val
 	try {
-		await loadFont(val)
+		await FabricUtils.loadFont(val)
 	} finally {
 		activeText.value.set('fontFamily', val)
 	}
@@ -994,7 +986,7 @@ const addCompass = async () => {
 		activeEditorObject.value = compassImage.value
 		return
 	}
-	compassImage.value = await createImage({
+	compassImage.value = await FabricEditor.createImage({
 		imageSource: compassImg,
 		canvas: editor.canvas,
 	})
@@ -1023,7 +1015,7 @@ const changeCompass = (val: boolean) => {
 
 // ------经纬线start------
 const latlonFlag = ref(false)
-let latlonline: LatlonLine
+let latlonline: FabricEditor.LatlonLine
 /**
  * @Date: 2024-05-14 09:46:10
  * @Description: 添加经纬线
@@ -1031,14 +1023,19 @@ let latlonline: LatlonLine
  */
 const addLatlon = async () => {
 	if (editor) {
-		latlonline = new LatlonLine(editor, editor.canvas, activeImage.value, {
-			rect: {
-				minLat: 10,
-				maxLat: 30,
-				minLon: 100,
-				maxLon: 130,
-			},
-		})
+		latlonline = new FabricEditor.LatlonLine(
+			editor,
+			editor.canvas,
+			activeImage.value,
+			{
+				rect: {
+					minLat: 10,
+					maxLat: 30,
+					minLon: 100,
+					maxLon: 130,
+				},
+			}
+		)
 	}
 }
 /**
@@ -1065,7 +1062,7 @@ const changeLatlon = (val: boolean) => {
 
 // ------比例尺start------
 const scaleFlag = ref(false)
-let scaleRule: ScaleRule
+let scaleRule: FabricEditor.ScaleRule
 /**
  * @Date: 2024-05-14 09:46:10
  * @Description: 添加经纬线
@@ -1073,14 +1070,19 @@ let scaleRule: ScaleRule
  */
 const addScale = async () => {
 	if (editor) {
-		scaleRule = new ScaleRule(editor, editor.canvas, activeImage.value, {
-			rect: {
-				minLat: 10,
-				maxLat: 30,
-				minLon: 100,
-				maxLon: 130,
-			},
-		})
+		scaleRule = new FabricEditor.ScaleRule(
+			editor,
+			editor.canvas,
+			activeImage.value,
+			{
+				rect: {
+					minLat: 10,
+					maxLat: 30,
+					minLon: 100,
+					maxLon: 130,
+				},
+			}
+		)
 	}
 }
 /**
@@ -1099,7 +1101,7 @@ const changeScale = (val: boolean) => {
 
 // ------图例start------
 const legendFlag = ref(false)
-let legendBox: LegendBox
+let legendBox: FabricEditor.LegendBox
 /**
  * @Date: 2024-05-14 09:46:10
  * @Description: 添加图例
@@ -1107,7 +1109,12 @@ let legendBox: LegendBox
  */
 const addLegendBox = async () => {
 	if (editor) {
-		legendBox = new LegendBox(editor, editor.canvas, activeImage.value, {})
+		legendBox = new FabricEditor.LegendBox(
+			editor,
+			editor.canvas,
+			activeImage.value,
+			{}
+		)
 	}
 }
 /**
@@ -1144,7 +1151,7 @@ const addTable = async (img: string) => {
 		return
 	}
 
-	tableImage.value = await createImage({
+	tableImage.value = await FabricEditor.createImage({
 		imageSource: img,
 		canvas: editor.canvas,
 	})
@@ -1184,7 +1191,7 @@ const initBrush = () => {
 	if (editor) {
 		editor.canvas.isDrawingMode = true
 		editor.canvas.freeDrawingCursor = `url("data:image/svg+xml;charset=utf-8,${encodeURIComponent(
-			DRAW_MODE_CURSOR
+			FabricIcons.DRAW_MODE_CURSOR
 		)}") 4 12, crosshair`
 		const freeDrawingBrush = new fabric.PencilBrush(editor.canvas)
 		editor.canvas.freeDrawingBrush = freeDrawingBrush
@@ -1203,7 +1210,7 @@ const stopFreeDrawMode = () => {
 }
 
 // ------线段start------
-let gpolyline: GPolyline | undefined
+let gpolyline: FabricEditor.GPolyline | undefined
 const lineOption = ref({
 	stroke: 'rgba(255,0,0,1)',
 	strokeWidth: 2,
@@ -1214,7 +1221,7 @@ const initPolyline = () => {
 			activeTool.value = undefined
 			gpolyline = undefined
 		}
-		gpolyline = new GPolyline(editor, editor.canvas, cb, {
+		gpolyline = new FabricEditor.GPolyline(editor, editor.canvas, cb, {
 			...lineOption.value,
 		})
 	}
@@ -1229,10 +1236,12 @@ const pointOption = ref({
 	radius: 5,
 	fill: 'rgba(255,0,0,1)',
 })
-let gPoint: GPoint
+let gPoint: FabricEditor.GPoint
 const initPoint = () => {
 	if (editor) {
-		gPoint = new GPoint(editor, editor.canvas, { ...pointOption.value })
+		gPoint = new FabricEditor.GPoint(editor, editor.canvas, {
+			...pointOption.value,
+		})
 	}
 }
 /**
@@ -1252,7 +1261,7 @@ const circleOption = ref({
 })
 const initCircle = () => {
 	if (editor) {
-		createShape(fabric.Circle, {
+		FabricEditor.createShape(fabric.Circle, {
 			radius: 100,
 			...circleOption.value,
 			canvas: editor.canvas,
@@ -1268,7 +1277,7 @@ const rectOption = ref({
 })
 const initRect = () => {
 	if (editor) {
-		createShape(fabric.Rect, {
+		FabricEditor.createShape(fabric.Rect, {
 			width: 200,
 			height: 200,
 			...rectOption.value,

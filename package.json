@@ -37,6 +37,7 @@
 		"@types/fabric": "^5.3.7",
 		"@types/fontfaceobserver": "^2.1.3",
 		"@types/uuid": "^9.0.8",
+		"@zbangbang/fabric-editor": "^1.0.5",
 		"axios": "^1.6.8",
 		"dayjs": "^1.11.11",
 		"element-plus": "^2.7.4",
