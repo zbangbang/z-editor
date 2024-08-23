@@ -2,7 +2,7 @@
  * @FilePath: index.vue
  * @Author: @zhangl
  * @Date: 2024-05-29 11:52:53
- * @LastEditTime: 2024-06-07 15:25:09
+ * @LastEditTime: 2024-08-23 14:05:31
  * @LastEditors: @zhangl
  * @Description:
 -->
@@ -275,6 +275,9 @@
 					@click="checkFlowSubmit()"
 					>保存</el-button
 				>
+				<el-button :style="{ width: '90px' }" type="primary" @click="loadJson()"
+					>加载</el-button
+				>
 			</div>
 		</template>
 	</VDialog>
@@ -314,15 +317,9 @@ import Circle from './components/circle.vue'
 import Rect from './components/rect.vue'
 import Table from './components/table.vue'
 import ImgList from './components/imgList.vue'
-import { TempLegend, ToolType, toolList, imgList } from './config'
+import { TempLegend, ToolType, toolList, imgList, jsonStr } from './config'
 import compassImg from '@/assets/images/mapProduct/compass.png'
-import {
-	fabric,
-	Editor,
-	FabricEditor,
-	FabricUtils,
-	FabricIcons,
-} from '@zbangbang/fabric-editor'
+import { fabric, Editor, FabricEditor, FabricUtils, FabricIcons } from '~/lib'
 
 // const props = withDefaults(defineProps<{}>(), {})
 // const {} = toRefs(props)
@@ -1284,6 +1281,10 @@ const initRect = () => {
 			canvas: editor.canvas,
 		})
 	}
+}
+
+const loadJson = () => {
+	editor.autoSave.loadFromJson(JSON.stringify(jsonStr))
 }
 </script>
 

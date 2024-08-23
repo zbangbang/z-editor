@@ -7,6 +7,7 @@ export default class AutoSave {
   private editor: Editor;
   private saving: boolean;
   private canSave: boolean;
+  public saveJson: string;
 
   constructor(editor) {
     this.canvas = editor.canvas;
@@ -40,7 +41,9 @@ export default class AutoSave {
 
     try {
       if (this.canSave) {
-        localStorage.setItem('fabritor_web_json', this._getJSON());
+        let json = this._getJSON()
+        localStorage.setItem('fabritor_web_json', json);
+        this.saveJson = json
       }
     } catch (e) { console.log(e) }
 
@@ -71,5 +74,14 @@ export default class AutoSave {
         }
       } catch (e) { console.log(e) }
     }
+  }
+
+  public async loadFromJson(jsonStr: string) {
+    try {
+      if (jsonStr) {
+        const json = JSON.parse(jsonStr);
+        await this.editor.loadFromJSON(json);
+      }
+    } catch (e) { console.log(e) }
   }
 }
