@@ -2,7 +2,7 @@
  * @FilePath: index.vue
  * @Author: @zhangl
  * @Date: 2024-05-29 11:52:53
- * @LastEditTime: 2024-08-23 14:05:31
+ * @LastEditTime: 2024-08-24 23:52:49
  * @LastEditors: @zhangl
  * @Description:
 -->
@@ -1110,7 +1110,33 @@ const addLegendBox = async () => {
 			editor,
 			editor.canvas,
 			activeImage.value,
-			{}
+			{
+				legend: {
+					unit: '',
+					list: [
+						{
+							value: 1,
+							label: '一级风险',
+							color: [24, 113, 228, 1],
+						},
+						{
+							value: 2,
+							label: '二级风险',
+							color: [104, 236, 74, 1],
+						},
+						{
+							value: 1,
+							label: '三级风险',
+							color: [235, 165, 43, 1],
+						},
+						{
+							value: 1,
+							label: '四级风险',
+							color: [240, 52, 0, 1],
+						},
+					],
+				},
+			}
 		)
 	}
 }

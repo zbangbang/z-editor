@@ -2,7 +2,7 @@
  * @FilePath: legendBox.ts
  * @Author: @zhangl
  * @Date: 2024-05-16 13:36:25
- * @LastEditTime: 2024-06-06 10:59:32
+ * @LastEditTime: 2024-08-24 23:53:00
  * @LastEditors: @zhangl
  * @Description:
  */
@@ -126,7 +126,13 @@ export class LegendBox {
     let { legend, tHeight, padding, rectWidth, rectHeight } = this.options
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')!
-    const numArr = legend.list.map(item => item.value)
+    let numArr: any[] = []
+    let hasLabel: boolean = legend.list.some(item => item.label)
+    if (hasLabel) {
+      numArr = legend.list.map(item => item.label)
+    } else {
+      numArr = legend.list.map(item => item.value)
+    }
     let widthList = getTextWidthList(numArr, '12px')
     const maxW = Math.max(...widthList)
     canvas.width = padding * 2 + rectWidth + maxW + 2
@@ -139,17 +145,21 @@ export class LegendBox {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     legend.list.forEach((item, index) => {
       ctx.fillStyle = item.color.length === 3 ? `rgb(${item.color.join(',')})` : `rgba(${item.color.join(',')})`
-      ctx.fillRect(padding, rectHeight * index + padding, 16, 16)
+      ctx.fillRect(padding, rectHeight * index + padding, rectWidth, rectHeight)
       ctx.font = '12px'
       ctx.fillStyle = 'white'
       // ctx.strokeStyle = 'red'
       // ctx.textAlign = 'left'
       ctx.textBaseline = 'middle'
       // 绘制文字
-      ctx.fillText(String(item.value), padding + rectWidth + 2, rectHeight * (index + 0.5) + padding)
+      if (hasLabel) {
+        ctx.fillText(String(item.label), padding + rectWidth + 2, rectHeight * (index + 0.5) + padding)
+      } else {
+        ctx.fillText(String(item.value), padding + rectWidth + 2, rectHeight * (index + 0.5) + padding)
+      }
     })
     this.imgUrl = canvas.toDataURL()
-    // downloadFile(this.canvasImage, 'png', 'test')
+    // downloadFile(this.imgUrl, 'png', 'test')
 
     try {
       this.canvasImage = await loadImage(this.imgUrl);
